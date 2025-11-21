@@ -17,14 +17,16 @@ const LoginComprador = () => {
         password,
       });
 
-      // Guardar token
+      // ✅ Guardar token
       localStorage.setItem("token", data.token);
+
+      // ✅ Guardar datos del comprador
+      localStorage.setItem("comprador", JSON.stringify(data.comprador));
 
       Swal.fire("Bienvenido", "Login correcto", "success");
 
-      // 👉 Redirección a la vista exclusiva del comprador
-      navigate("/comprador/home");
-
+      // ✅ Redirección al inicio del comprador
+      navigate("/comprador/inicio");
     } catch (error) {
       Swal.fire(
         "Error",

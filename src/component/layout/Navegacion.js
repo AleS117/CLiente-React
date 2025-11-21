@@ -9,34 +9,35 @@ const Navegacion = () => {
             <nav className="navegacion">
 
                 {/* Administradores */}
-                <Link to={"/administradores"} className="administradores">
+                <Link to="/admin/administradores" className="administradores">
                     Administradores
                 </Link>
 
                 {/* Compradores */}
-                <Link to={"/compradores"} className="compradores">
+                <Link to="/admin/compradores" className="compradores">
                     Compradores
                 </Link>
 
                 {/* Compras */}
-                <Link to={"/compras"} className="compras">
+                <Link to="/admin/compras" className="compras">
                     Compras
                 </Link>
 
                 {/* Especies */}
-                <Link to={"/especies"} className="especies">
+                <Link to="/admin/especies" className="especies">
                     Especies
                 </Link>
 
                 {/* Lotes */}
-                <Link to={"/lotes"} className="lotes">
+                <Link to="/admin/lotes" className="lotes">
                     Lotes
                 </Link>
 
                 {/* Tipos */}
-                <Link to={"/tipos"} className="tipos">
+                <Link to="/admin/tipos" className="tipos">
                     Tipos
                 </Link>
+
             </nav>
         </aside>
     );
