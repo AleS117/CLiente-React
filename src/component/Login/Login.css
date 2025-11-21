@@ -1,0 +1,28 @@
+.login-container {
+    width: 40%;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.form-login .campo {
+    margin-bottom: 20px;
+}
+
+.form-login input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.btn-verde {
+    background: #00a86b;
+    color: white;
+    padding: 12px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-size: 18px;
+}
