@@ -6,7 +6,7 @@ const Administradores = () => {
   const [admins, setAdmins] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editAdmin, setEditAdmin] = useState(null);
-  const [formData, setFormData] = useState({ usuario: "", password: "" });
+  const [formData, setFormData] = useState({ usuario: "", correo: "", password: "" });
 
   const token = localStorage.getItem("token");
 
@@ -26,13 +26,13 @@ const Administradores = () => {
   }, []);
 
   const handleNuevo = () => {
-    setFormData({ usuario: "", password: "" });
+    setFormData({ usuario: "", correo: "", password: "" });
     setEditAdmin(null);
     setShowForm(true);
   };
 
   const handleEditar = (admin) => {
-    setFormData({ usuario: admin.usuario, password: "" });
+    setFormData({ usuario: admin.usuario, correo: admin.correo || "", password: "" });
     setEditAdmin(admin);
     setShowForm(true);
   };
@@ -63,20 +63,30 @@ const Administradores = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const data = { usuario: formData.usuario, correo: formData.correo };
+
+      // Solo agregamos password si se cambió
+      if (formData.password && formData.password.trim() !== "") {
+        data.password = formData.password;
+      }
+
       if (editAdmin) {
-        await clienteAxios.put(`/api/administrador/actualizar/${editAdmin._id}`, formData, {
+        const id = editAdmin._id;
+        await clienteAxios.put(`/api/administrador/actualizar/${id}`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Swal.fire("Actualizado!", "Administrador actualizado", "success");
       } else {
-        await clienteAxios.post("/api/administrador/crear", formData, {
+        await clienteAxios.post("/api/administrador/crear", data, {
           headers: { Authorization: `Bearer ${token}` },
         });
         Swal.fire("Creado!", "Administrador creado correctamente", "success");
       }
+
       setShowForm(false);
       consultarAPI();
     } catch (error) {
+      console.log(error);
       Swal.fire("Error", "No se pudo guardar", "error");
     }
   };
@@ -92,6 +102,7 @@ const Administradores = () => {
         <thead>
           <tr>
             <th style={{ border: "1px solid #ccc", padding: "8px" }}>Usuario</th>
+            <th style={{ border: "1px solid #ccc", padding: "8px" }}>Correo</th>
             <th style={{ border: "1px solid #ccc", padding: "8px" }}>Acciones</th>
           </tr>
         </thead>
@@ -99,6 +110,7 @@ const Administradores = () => {
           {admins.map((admin) => (
             <tr key={admin._id}>
               <td style={{ border: "1px solid #ccc", padding: "8px" }}>{admin.usuario}</td>
+              <td style={{ border: "1px solid #ccc", padding: "8px" }}>{admin.correo}</td>
               <td style={{ border: "1px solid #ccc", padding: "8px" }}>
                 <button className="btn btn-azul" onClick={() => handleEditar(admin)}>Editar</button>
                 <button className="btn btn-rojo" onClick={() => handleEliminar(admin._id)} style={{ marginLeft: "10px" }}>
@@ -123,12 +135,19 @@ const Administradores = () => {
                 onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
                 required
               />
+              <label>Correo:</label>
+              <input
+                type="email"
+                value={formData.correo}
+                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+                required
+              />
               <label>Contraseña:</label>
               <input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required={!editAdmin}
+                required={!editAdmin} // obligatorio solo si es nuevo
               />
               <div style={{ marginTop: "10px" }}>
                 <button type="submit" className="btn btn-verde">Guardar</button>

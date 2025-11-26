@@ -2,26 +2,35 @@ import React from "react";
 import Swal from "sweetalert2";
 import clienteAxios from "../../config/axios";
 
-const eliminarCompra = (id) => {
-  Swal.fire({
-    title: "¿Eliminar compra?",
-    text: "No podrás recuperar este registro.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Sí, eliminar",
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      clienteAxios.delete(`/api/compras/eliminar/${id}`).then(() => {
-        Swal.fire("Eliminado", "La compra fue eliminada.", "success");
-      });
-    }
-  });
-};
-
-function Compra({ compra }) {
+function Compra({ compra, onEliminar }) {
   const { _id, id_lte, codigo_cpr, precio_total, fecha } = compra;
+
+  const handleEliminar = async () => {
+    const result = await Swal.fire({
+      title: "¿Eliminar compra?",
+      text: "No podrás recuperar este registro.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await clienteAxios.delete(`/api/compras/eliminar/${_id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        Swal.fire("Eliminado", "La compra fue eliminada.", "success");
+        onEliminar(_id); // Elimina del estado
+      } catch (error) {
+        console.log(error);
+        Swal.fire("Error", "No se pudo eliminar la compra.", "error");
+      }
+    }
+  };
 
   return (
     <li className="cliente">
@@ -34,7 +43,7 @@ function Compra({ compra }) {
       </div>
 
       <div className="acciones">
-        <button className="btn btn-rojo" onClick={() => eliminarCompra(_id)}>
+        <button className="btn btn-rojo" onClick={handleEliminar}>
           <i className="fas fa-times"></i> Eliminar
         </button>
       </div>
