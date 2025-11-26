@@ -1,46 +1,28 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link, Outlet } from "react-router-dom";
 
 const Navegacion = () => {
-    return (
-        <aside className="sidebar col-3">
-            <h2>Administración</h2>
+  return (
+    <div className="admin-layout" style={{ display: "flex" }}>
+      {/* Sidebar */}
+      <aside className="sidebar col-3">
+        <h2>Administración</h2>
+        <nav className="navegacion">
+          <Link to="/admin/administradores">Administradores</Link>
+          <Link to="/admin/compradores">Compradores</Link>
+          <Link to="/admin/compras">Compras</Link>
+          <Link to="/admin/especies">Especies</Link>
+          <Link to="/admin/lotes">Lotes</Link>
+          <Link to="/admin/tipos">Tipos</Link>
+        </nav>
+      </aside>
 
-            <nav className="navegacion">
-
-                {/* Administradores */}
-                <Link to="/admin/administradores" className="administradores">
-                    Administradores
-                </Link>
-
-                {/* Compradores */}
-                <Link to="/admin/compradores" className="compradores">
-                    Compradores
-                </Link>
-
-                {/* Compras */}
-                <Link to="/admin/compras" className="compras">
-                    Compras
-                </Link>
-
-                {/* Especies */}
-                <Link to="/admin/especies" className="especies">
-                    Especies
-                </Link>
-
-                {/* Lotes */}
-                <Link to="/admin/lotes" className="lotes">
-                    Lotes
-                </Link>
-
-                {/* Tipos */}
-                <Link to="/admin/tipos" className="tipos">
-                    Tipos
-                </Link>
-
-            </nav>
-        </aside>
-    );
+      {/* Contenido principal */}
+      <main className="contenido-principal col-9" style={{ padding: "20px", flex: 1 }}>
+        <Outlet /> {/* 🔹 Aquí se renderizan las rutas hijas */}
+      </main>
+    </div>
+  );
 };
 
 export default Navegacion;

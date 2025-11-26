@@ -15,11 +15,10 @@ const CalendarioComprador = () => {
   const comprador = JSON.parse(localStorage.getItem("comprador"));
   const token = localStorage.getItem("token");
 
-  // 🔹 Redirección segura
   useEffect(() => {
     if (!comprador || !comprador.id) {
-      navigate("/login-comprador");
-    }
+  navigate("/login-comprador");
+}
   }, [comprador, navigate]);
 
   const handleConfirmar = async () => {
@@ -28,7 +27,8 @@ const CalendarioComprador = () => {
       return;
     }
 
-    const fechaFormateada = fecha.toISOString().split("T")[0]; // yyyy-mm-dd
+// Convierte la fecha seleccionada a yyyy-mm-dd en tu zona local
+const fechaFormateada = fecha.toLocaleDateString("en-CA");
     setLoading(true);
     setError(null);
 
@@ -88,7 +88,7 @@ const CalendarioComprador = () => {
           {compras.map((compra) => (
             <li key={compra._id} style={{ borderBottom: "1px solid #ccc", padding: "10px 0" }}>
               <p><strong>Código:</strong> {compra.codigo_cpr}</p>
-              <p><strong>Kilos:</strong> {compra.kilos}</p>
+              <p><strong>Precio por kilo:</strong> ${compra.precio_kilo_final}</p>
               <p><strong>Precio total:</strong> ${compra.precio_total}</p>
               <p><strong>Fecha:</strong> {new Date(compra.fecha).toLocaleDateString()}</p>
             </li>

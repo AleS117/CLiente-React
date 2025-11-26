@@ -21,6 +21,15 @@ const InicioComprador = () => {
       >
         Ver Calendario
       </button>
+
+      <button
+  className="btn btn-gris"
+  onClick={() => navigate("/")}
+  style={{ marginTop: "10px" }}
+>
+  Ir al Inicio
+</button>
+
     </div>
   );
 };

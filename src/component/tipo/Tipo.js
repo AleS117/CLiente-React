@@ -1,47 +1,45 @@
-import React, { useEffect, useState, Fragment } from "react";
+// TipoItem.js
+import React from "react";
+import Swal from "sweetalert2";
 import clienteAxios from "../../config/axios";
-import Tipo from "./Tipo";
 import { Link } from "react-router-dom";
 
-const Tipos = () => {
-    const [tipos, setTipos] = useState([]);
+const TipoItem = ({ tipo }) => {
+  if (!tipo) return null;
+  const { _id, nombre } = tipo;
 
-    const consultarAPI = async () => {
-        try {
-            const respuesta = await clienteAxios.get("/api/tipo/consulta", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
+  const eliminarTipo = () => {
+    Swal.fire({
+      title: "¿Eliminar tipo?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+    }).then((r) => {
+      if (r.isConfirmed) {
+        clienteAxios.delete(`/api/tipo/eliminar/${_id}`).then(() => {
+          Swal.fire("Eliminado", "El tipo fue eliminado.", "success")
+            .then(() => window.location.reload());
+        });
+      }
+    });
+  };
 
-            setTipos(respuesta.data);
-        } catch (error) {
-            console.log("Error:", error);
-        }
-    };
-
-    useEffect(() => {
-        consultarAPI();
-    }, []);
-
-    return (
-        <Fragment>
-            <h2>Tipos</h2>
-
-            <Link to={"/tipos/nuevo"} className="btn btn-verde nvo-cliente">
-                <i className="fas fa-plus-circle"></i> Nuevo Tipo
-            </Link>
-
-            <ul className="listado-clientes">
-                {tipos.map(t => (
-                    <Tipo
-                        key={t._id}
-                        tipo={t}
-                    />
-                ))}
-            </ul>
-        </Fragment>
-    );
+  return (
+    <li className="cliente">
+      <div className="info-cliente">
+        <p><b>ID:</b> {_id}</p>
+        <p><b>Nombre:</b> {nombre}</p>
+      </div>
+      <div className="acciones">
+        <Link to={`/tipo/editar/${_id}`} className="btn btn-azul">
+          Editar
+        </Link>
+        <button className="btn btn-rojo" onClick={eliminarTipo}>
+          Eliminar
+        </button>
+      </div>
+    </li>
+  );
 };
 
-export default Tipos;
+export default TipoItem;

@@ -9,24 +9,26 @@ const LoginAdmin = () => {
   const navigate = useNavigate();
 
   const enviarLogin = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const respuesta = await clienteAxios.post(
-        "/api/administrador/login",
-        { usuario, password }
-      );
+  try {
+    const respuesta = await clienteAxios.post(
+      "/api/administrador/login",
+      { usuario, password }
+    );
 
-      localStorage.setItem("token", respuesta.data.token);
+    localStorage.setItem("token", respuesta.data.token);
 
-      Swal.fire("Bienvenido", "Login correcto", "success");
+    Swal.fire("Bienvenido", "Login correcto", "success");
 
-      navigate("/administradores");
+    // 🔹 Aquí cambiamos la ruta para que vaya al layout del admin
+    navigate("/admin/administradores");
 
-    } catch (error) {
-      Swal.fire("Error", "Usuario o contraseña incorrectos", "error");
-    }
-  };
+  } catch (error) {
+    Swal.fire("Error", "Usuario o contraseña incorrectos", "error");
+  }
+};
+
 
   return (
     <div className="login-container">
