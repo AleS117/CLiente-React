@@ -11,7 +11,8 @@ const TipoForm = () => {
   useEffect(() => {
     if (id) {
       clienteAxios.get(`/api/tipos/${id}`)
-        .then(res => setNombre(res.data.nombre));
+        .then(res => setNombre(res.data.nombre))
+        .catch(err => Swal.fire("Error", "No se pudieron cargar los datos", "error"));
     }
   }, [id]);
 

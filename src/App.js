@@ -24,6 +24,7 @@ import Compras from "./component/compras/Compras.js";
 import Especies from "./component/especies/Especies.js"; // Lista completa
 import EspecieForm from "./component/especies/EspecieForm.js"; // Formulario agregar/editar
 import Lotes from "./component/lotes/Lotes.js";
+import LoteForm from "./component/lotes/LoteForm.js"; // Formulario agregar lote
 import Tipos from "./component/tipo/Tipos.js"; // Lista completa
 import TipoForm from "./component/tipo/TipoForm.js"; // Formulario agregar/editar
 
@@ -41,8 +42,8 @@ function App() {
         {/* 🔴 RUTAS ADMIN */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="administradores" element={<Administradores />} />
-          <Route path="administradores/nuevo" element={<Administradores />} /> {/* o formulario de creación */}
-          <Route path="administradores/editar/:id" element={<Administradores />} /> {/* edición */}
+          <Route path="administradores/nuevo" element={<Administradores />} />
+          <Route path="administradores/editar/:id" element={<Administradores />} />
           
           <Route path="compradores" element={<Compradores />} />
           <Route path="compras" element={<Compras />} />
@@ -57,7 +58,9 @@ function App() {
           <Route path="tipos/nuevo" element={<TipoForm />} /> {/* crear */}
           <Route path="tipos/editar/:id" element={<TipoForm />} /> {/* editar */}
 
-          <Route path="lotes" element={<Lotes />} />
+          {/* Lotes */}
+          <Route path="lotes" element={<Lotes />} /> {/* lista */}
+          <Route path="lotes/nuevo" element={<LoteForm />} /> {/* crear nuevo lote */}
         </Route>
 
         {/* 🔵 RUTAS COMPRADOR */}
