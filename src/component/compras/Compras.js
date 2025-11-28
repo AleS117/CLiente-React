@@ -1,48 +1,74 @@
-import React, { useEffect, useState, Fragment } from "react";
+// src/component/compras/Compras.js
+import React, { useState, useEffect } from "react";
 import clienteAxios from "../../config/axios";
-import Compra from "./Compra";
+import Swal from "sweetalert2";
 
-const Compras = () => {
-  const [compras, setCompras] = useState([]);
+const CompraItem = ({ compra, refrescar, soloLectura }) => {
+  if (!compra) return null;
+  const { _id, comprador, total, fecha } = compra;
 
-  // Consultar todas las compras
-  const consultarAPI = async () => {
-    try {
-      const respuesta = await clienteAxios.get("/api/compras/consulta", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-
-      setCompras(respuesta.data);
-    } catch (error) {
-      console.log("Error:", error);
+  const eliminarCompra = async () => {
+    const r = await Swal.fire({
+      title: "¿Eliminar compra?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+    });
+    if (r.isConfirmed) {
+      try {
+        await clienteAxios.delete(`/api/compras/eliminar/${_id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        Swal.fire("Eliminada", "La compra fue eliminada.", "success");
+        refrescar();
+      } catch {
+        Swal.fire("Error", "No se pudo eliminar la compra.", "error");
+      }
     }
   };
 
-  useEffect(() => {
-    consultarAPI();
-  }, []);
+  return (
+    <li className="compra-item">
+      <div className="info-compra">
+        <p><b>ID:</b> {_id}</p>
+        <p><b>Comprador:</b> {comprador?.nombre || comprador}</p>
+        <p><b>Total:</b> {total}</p>
+        <p><b>Fecha:</b> {new Date(fecha).toLocaleString()}</p>
+      </div>
+      <div className="acciones">
+        {!soloLectura && <button className="btn btn-rojo" onClick={eliminarCompra}>Eliminar</button>}
+      </div>
+    </li>
+  );
+};
 
-  // Función para eliminar una compra del estado
-  const eliminarCompraDelState = (id) => {
-    setCompras(compras.filter(c => c._id !== id));
+const Compras = ({ soloLectura = false }) => {
+  const [compras, setCompras] = useState([]);
+
+  const consultarAPI = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const resp = await clienteAxios.get("/api/compras/consulta", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      setCompras(resp.data);
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "No se pudieron cargar las compras", "error");
+    }
   };
 
-  return (
-    <Fragment>
-      <h2>Compras</h2>
+  useEffect(() => { consultarAPI(); }, []);
 
-      <ul className="listado-clientes">
-        {compras.map(c => (
-          <Compra
-            key={c._id}
-            compra={c}
-            onEliminar={eliminarCompraDelState} // Pasa la función al componente hijo
-          />
+  return (
+    <div>
+      <h2>Compras</h2>
+      <ul className="lista-compras">
+        {compras.length === 0 ? <p>No hay compras.</p> : compras.map(c => (
+          <CompraItem key={c._id} compra={c} refrescar={consultarAPI} soloLectura={soloLectura} />
         ))}
       </ul>
-    </Fragment>
+    </div>
   );
 };
 

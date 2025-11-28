@@ -1,179 +1,71 @@
-import React, { useEffect, useState } from "react";
+// src/component/administrador/Administradores.js
+import React, { useState, useEffect } from "react";
 import clienteAxios from "../../config/axios";
 import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 
-const Administradores = () => {
-  const [admins, setAdmins] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [editAdmin, setEditAdmin] = useState(null);
-  const [formData, setFormData] = useState({ usuario: "", correo: "", password: "" });
+const AdminItem = ({ admin, refrescar, soloLectura }) => {
+  if (!admin) return null;
+  const { _id, usuario, correo, rol } = admin;
 
-  const token = localStorage.getItem("token");
-
-  const consultarAPI = async () => {
-    try {
-      const respuesta = await clienteAxios.get("/api/administrador/consulta", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAdmins(respuesta.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    consultarAPI();
-  }, []);
-
-  const handleNuevo = () => {
-    setFormData({ usuario: "", correo: "", password: "" });
-    setEditAdmin(null);
-    setShowForm(true);
-  };
-
-  const handleEditar = (admin) => {
-    setFormData({ usuario: admin.usuario, correo: admin.correo || "", password: "" });
-    setEditAdmin(admin);
-    setShowForm(true);
-  };
-
-  const handleEliminar = async (id) => {
-    const confirm = await Swal.fire({
+  const eliminarAdmin = async () => {
+    const r = await Swal.fire({
       title: "¿Eliminar administrador?",
-      text: "No podrás revertir esto",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: "Sí",
     });
-
-    if (confirm.isConfirmed) {
+    if (r.isConfirmed) {
       try {
-        await clienteAxios.delete(`/api/administrador/eliminar/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        await clienteAxios.delete(`/api/administrador/eliminar/${_id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        Swal.fire("Eliminado!", "Administrador eliminado correctamente", "success");
-        consultarAPI();
-      } catch (error) {
-        Swal.fire("Error", "No se pudo eliminar", "error");
+        Swal.fire("Eliminado", "Administrador eliminado.", "success");
+        refrescar();
+      } catch {
+        Swal.fire("Error", "No se pudo eliminar el administrador.", "error");
       }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const data = { usuario: formData.usuario, correo: formData.correo };
-
-      // Solo agregamos password si se cambió
-      if (formData.password && formData.password.trim() !== "") {
-        data.password = formData.password;
-      }
-
-      if (editAdmin) {
-        const id = editAdmin._id;
-        await clienteAxios.put(`/api/administrador/actualizar/${id}`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        Swal.fire("Actualizado!", "Administrador actualizado", "success");
-      } else {
-        await clienteAxios.post("/api/administrador/crear", data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        Swal.fire("Creado!", "Administrador creado correctamente", "success");
-      }
-
-      setShowForm(false);
-      consultarAPI();
-    } catch (error) {
-      console.log(error);
-      Swal.fire("Error", "No se pudo guardar", "error");
     }
   };
 
   return (
+    <li className="admin-item">
+      <p><b>ID:</b> {_id}</p>
+      <p><b>Usuario:</b> {usuario}</p>
+      <p><b>Correo:</b> {correo || "—"}</p>
+      <p><b>Rol:</b> {rol}</p>
+      <div className="acciones">
+        {!soloLectura && <Link to={`/admin/administradores/editar/${_id}`} className="btn btn-azul">Editar</Link>}
+        {!soloLectura && <button className="btn btn-rojo" onClick={eliminarAdmin}>Eliminar</button>}
+      </div>
+    </li>
+  );
+};
+
+const Administradores = ({ soloLectura = false }) => {
+  const [admins, setAdmins] = useState([]);
+
+  const consultarAPI = async () => {
+    try {
+      const resp = await clienteAxios.get("/api/administrador/consulta", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setAdmins(resp.data);
+    } catch (err) {
+      Swal.fire("Error", "No se pudieron cargar los administradores", "error");
+    }
+  };
+
+  useEffect(() => { consultarAPI(); }, []);
+
+  return (
     <div>
       <h2>Administradores</h2>
-      <button className="btn btn-verde" onClick={handleNuevo}>
-        Nuevo Administrador
-      </button>
-
-      <table className="tabla" style={{ width: "100%", marginTop: "20px", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ border: "1px solid #ccc", padding: "8px" }}>Usuario</th>
-            <th style={{ border: "1px solid #ccc", padding: "8px" }}>Correo</th>
-            <th style={{ border: "1px solid #ccc", padding: "8px" }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {admins.map((admin) => (
-            <tr key={admin._id}>
-              <td style={{ border: "1px solid #ccc", padding: "8px" }}>{admin.usuario}</td>
-              <td style={{ border: "1px solid #ccc", padding: "8px" }}>{admin.correo}</td>
-              <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                <button className="btn btn-azul" onClick={() => handleEditar(admin)}>Editar</button>
-                <button className="btn btn-rojo" onClick={() => handleEliminar(admin._id)} style={{ marginLeft: "10px" }}>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Modal para crear/editar */}
-      {showForm && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{editAdmin ? "Editar Administrador" : "Nuevo Administrador"}</h3>
-            <form onSubmit={handleSubmit}>
-              <label>Usuario:</label>
-              <input
-                type="text"
-                value={formData.usuario}
-                onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
-                required
-              />
-              <label>Correo:</label>
-              <input
-                type="email"
-                value={formData.correo}
-                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                required
-              />
-              <label>Contraseña:</label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required={!editAdmin} // obligatorio solo si es nuevo
-              />
-              <div style={{ marginTop: "10px" }}>
-                <button type="submit" className="btn btn-verde">Guardar</button>
-                <button type="button" className="btn btn-gris" onClick={() => setShowForm(false)} style={{ marginLeft: "10px"}}>Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <style jsx>{`
-        .modal {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .modal-content {
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          width: 400px;
-        }
-      `}</style>
+      {!soloLectura && <Link to="/admin/administradores/nuevo" className="btn btn-verde">+ Nuevo Administrador</Link>}
+      <ul className="lista-admins">
+        {admins.length === 0 ? <p>No hay administradores.</p> :
+          admins.map(a => <AdminItem key={a._id} admin={a} refrescar={consultarAPI} soloLectura={soloLectura} />)}
+      </ul>
     </div>
   );
 };

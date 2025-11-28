@@ -1,103 +1,81 @@
+// src/component/especies/EspecieForm.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import clienteAxios from "../../config/axios";
 import Swal from "sweetalert2";
 
-const EspecieForm = () => {
+const EspecieForm = ({ soloLectura = false }) => {
   const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState(""); // tipo seleccionado
-  const [tipos, setTipos] = useState([]); // lista de tipos
+  const [tipo, setTipo] = useState("");
+  const [tipos, setTipos] = useState([]);
   const [imagen, setImagen] = useState("");
 
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Cargar lista de tipos
   useEffect(() => {
-    clienteAxios
-      .get("/api/tipos/consulta", { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setTipos(res.data))
-      .catch(() => Swal.fire("Error", "No se pudieron cargar los tipos", "error"));
+    const cargarTipos = async () => {
+      try {
+        const res = await clienteAxios.get("/api/tipo/consulta", { headers: { Authorization: `Bearer ${token}` } });
+        setTipos(res.data);
+      } catch {
+        Swal.fire("Error", "No se pudieron cargar los tipos", "error");
+      }
+    };
+    cargarTipos();
   }, [token]);
 
-  // Cargar datos si es edición
   useEffect(() => {
-    if (id) {
-      clienteAxios
-        .get(`/api/especies/consulta/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((res) => {
-          if (res.data) {
-            setNombre(res.data.nombre);
-            setTipo(res.data.tipo?._id || ""); // guardamos el _id del tipo
-            setImagen(res.data.imagen || "");
-          }
-        })
-        .catch(() => Swal.fire("Error", "No se pudo cargar la especie", "error"));
-    }
+    if (!id) return;
+    const cargar = async () => {
+      try {
+        const res = await clienteAxios.get(`/api/especies/consulta/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        setNombre(res.data.nombre || "");
+        setTipo(res.data.tipo?._id || res.data.id_tpo || "");
+        setImagen(res.data.imagen || "");
+      } catch {
+        Swal.fire("Error", "No se pudo cargar la especie", "error");
+      }
+    };
+    cargar();
   }, [id, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (soloLectura) return;
     try {
-      const data = { nombre, tipo, imagen };
-
+      const data = { nombre, id_tpo: tipo, imagen };
       if (id) {
-        // editar
-        await clienteAxios.put(`/api/especies/actualizar/${id}`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        Swal.fire("Actualizado", "Especie actualizada correctamente", "success");
+        await clienteAxios.put(`/api/especies/actualizar/${id}`, data, { headers: { Authorization: `Bearer ${token}` } });
+        Swal.fire("Actualizado", "Especie actualizada", "success");
       } else {
-        // crear
-        await clienteAxios.post("/api/especies/crear", data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        Swal.fire("Creado", "Especie creada correctamente", "success");
-        // limpiar formulario
-        setNombre("");
-        setTipo("");
-        setImagen("");
+        await clienteAxios.post("/api/especies/crear", data, { headers: { Authorization: `Bearer ${token}` } });
+        Swal.fire("Creado", "Especie creada", "success");
       }
-
       navigate("/admin/especies");
-    } catch (err) {
-      Swal.fire("Error", "Ocurrió un error al guardar la especie", "error");
+    } catch {
+      Swal.fire("Error", "No se pudo guardar", "error");
     }
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "20px auto" }}>
+    <div style={{ maxWidth: 600, margin: "20px auto" }}>
       <h2>{id ? "Editar Especie" : "Nueva Especie"}</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre</label>
-        <input
-          type="text"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-        />
+        <input type="text" value={nombre} onChange={(e)=> setNombre(e.target.value)} disabled={soloLectura} required />
 
         <label>Tipo</label>
-        <select value={tipo} onChange={(e) => setTipo(e.target.value)} required>
-          <option value="">-- Selecciona un tipo --</option>
-          {tipos.map((t) => (
-            <option key={t._id} value={t._id}>
-              {t.nombre}
-            </option>
-          ))}
+        <select value={tipo} onChange={(e)=> setTipo(e.target.value)} disabled={soloLectura} required>
+          <option value="">-- Selecciona --</option>
+          {tipos.map(t => <option key={t._id} value={t._id}>{t.nombre}</option>)}
         </select>
 
         <label>Imagen (URL)</label>
-        <input
-          type="text"
-          value={imagen}
-          onChange={(e) => setImagen(e.target.value)}
-        />
+        <input type="text" value={imagen} onChange={(e)=> setImagen(e.target.value)} disabled={soloLectura} />
 
-        <button type="submit" className="btn btn-verde">
-          {id ? "Actualizar" : "Agregar"}
-        </button>
+        {!soloLectura && <button className="btn btn-verde" type="submit">{id ? "Actualizar" : "Agregar"}</button>}
       </form>
     </div>
   );

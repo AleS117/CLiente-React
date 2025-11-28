@@ -10,35 +10,35 @@ const Login = () => {
 
   const enviarLogin = async (e) => {
     e.preventDefault();
-
     try {
       let response;
-      // Detecta si es correo válido
       const esCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usuarioOCorreo);
 
       if (esCorreo) {
-        // Login comprador
         response = await clienteAxios.post("/api/compradores/login", {
           correo: usuarioOCorreo,
           password,
         });
 
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("comprador", JSON.stringify(response.data.comprador));
-
+        localStorage.setItem("rol", "COMPRADOR");
+        localStorage.setItem("usuario", JSON.stringify(response.data.comprador));
         Swal.fire("Bienvenido", "Login correcto", "success");
         navigate("/comprador/inicio");
+
       } else {
-        // Login administrador
         response = await clienteAxios.post("/api/administrador/login", {
           usuario: usuarioOCorreo,
           password,
         });
 
         localStorage.setItem("token", response.data.token);
-
+        localStorage.setItem("rol", response.data.admin.rol);
+        localStorage.setItem("usuario", JSON.stringify(response.data.admin));
         Swal.fire("Bienvenido", "Login correcto", "success");
-        navigate("/admin/administradores");
+
+        if (response.data.admin.rol === "ADMIN") navigate("/admin/administradores");
+        else navigate("/admin/administradores"); // TRABAJADOR verá solo
       }
     } catch (error) {
       Swal.fire(
@@ -52,7 +52,6 @@ const Login = () => {
   return (
     <div className="login-container">
       <h2>Iniciar Sesión</h2>
-
       <form onSubmit={enviarLogin}>
         <div className="campo">
           <label>Usuario o Correo</label>
@@ -63,7 +62,6 @@ const Login = () => {
             required
           />
         </div>
-
         <div className="campo">
           <label>Contraseña</label>
           <input
@@ -73,10 +71,7 @@ const Login = () => {
             required
           />
         </div>
-
-        <button type="submit" className="btn btn-verde">
-          Ingresar
-        </button>
+        <button type="submit" className="btn btn-verde">Ingresar</button>
       </form>
     </div>
   );

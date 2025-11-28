@@ -1,102 +1,77 @@
-import React, { useState, useEffect, Fragment } from "react";
-import Swal from "sweetalert2";
+// src/component/especies/Especies.js
+import React, { useState, useEffect } from "react";
 import clienteAxios from "../../config/axios";
+import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
 
-// Componente para cada especie
-function Especie({ especie, onEliminar }) {
+const EspecieItem = ({ especie, refrescar, soloLectura }) => {
   if (!especie) return null;
+  const { _id, nombre, tipo, imagen } = especie; // asumo que poblaste tipo como objeto
 
-  const { _id, nombre, tipo, imagen } = especie;
+  const eliminarEspecie = async () => {
+    const r = await Swal.fire({
+      title: "¿Eliminar especie?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+    });
+    if (r.isConfirmed) {
+      try {
+        await clienteAxios.delete(`/api/especies/eliminar/${_id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        Swal.fire("Eliminado", "La especie fue eliminada.", "success");
+        refrescar();
+      } catch {
+        Swal.fire("Error", "No se pudo eliminar la especie.", "error");
+      }
+    }
+  };
 
   return (
     <li className="especie-item">
       <div className="info-especie">
         <p><b>ID:</b> {_id}</p>
         <p><b>Nombre:</b> {nombre}</p>
-        <p><b>Tipo:</b> {tipo ? tipo.nombre : "Sin tipo"}</p>
+        <p><b>Tipo:</b> {tipo?.nombre || especie.id_tpo}</p>
         {imagen && <img src={imagen} alt={nombre} width="80" />}
       </div>
-
       <div className="acciones">
-        <Link to={`/admin/especies/editar/${_id}`} className="btn btn-azul">
-          Editar
-        </Link>
-        <button className="btn btn-rojo" onClick={() => onEliminar(_id)}>
-          Eliminar
-        </button>
+        {!soloLectura && <Link to={`/admin/especies/editar/${_id}`} className="btn btn-azul">Editar</Link>}
+        {!soloLectura && <button className="btn btn-rojo" onClick={eliminarEspecie}>Eliminar</button>}
       </div>
     </li>
   );
-}
+};
 
-const Especies = () => {
+const Especies = ({ soloLectura = false }) => {
   const [especies, setEspecies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const token = localStorage.getItem("token");
 
   const consultarAPI = async () => {
     try {
-      setLoading(true);
-      const respuesta = await clienteAxios.get("/api/especies/consulta", {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = localStorage.getItem("token");
+      const resp = await clienteAxios.get("/api/especies/consulta", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      setEspecies(respuesta.data);
+      setEspecies(resp.data);
     } catch (err) {
       console.error(err);
-      setError("Error al obtener las especies");
-    } finally {
-      setLoading(false);
+      Swal.fire("Error", "No se pudieron cargar las especies", "error");
     }
   };
 
-  const eliminarEspecie = (id) => {
-    Swal.fire({
-      title: "¿Eliminar especie?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí",
-    }).then(async (r) => {
-      if (r.isConfirmed) {
-        try {
-          await clienteAxios.delete(`/api/especies/eliminar/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          Swal.fire("Eliminado", "La especie fue eliminada.", "success");
-          setEspecies(especies.filter((esp) => esp._id !== id));
-        } catch (err) {
-          console.error(err);
-          Swal.fire("Error", "No se pudo eliminar la especie", "error");
-        }
-      }
-    });
-  };
-
-  useEffect(() => {
-    consultarAPI();
-  }, []);
+  useEffect(() => { consultarAPI(); }, []);
 
   return (
-    <Fragment>
+    <div>
       <h2>Especies</h2>
-
-      <Link to="/admin/especies/nuevo" className="btn btn-verde nvo-cliente">
-        <i className="fas fa-plus-circle"></i> Nueva Especie
-      </Link>
-
-      {loading && <p>Cargando especies...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {!loading && especies.length === 0 && <p>No hay especies registradas.</p>}
-
-      <ul className="listado-clientes">
-        {especies.map((esp) => (
-          <Especie key={esp._id} especie={esp} onEliminar={eliminarEspecie} />
+      {!soloLectura && <Link to="/admin/especies/nuevo" className="btn btn-verde">+ Nueva Especie</Link>}
+      <ul className="lista-especies">
+        {especies.length === 0 ? <p>No hay especies.</p> : especies.map(e => (
+          <EspecieItem key={e._id} especie={e} refrescar={consultarAPI} soloLectura={soloLectura} />
         ))}
       </ul>
-    </Fragment>
+    </div>
   );
 };
 
