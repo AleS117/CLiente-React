@@ -1,8 +1,7 @@
-// src/App.js
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-// Login unificado
+// Login
 import Login from "./component/Login/Login.js";
 
 // Layouts
@@ -30,15 +29,21 @@ import LoteForm from "./component/lotes/LoteForm.js";
 import Tipos from "./component/tipo/Tipos.js";
 import TipoForm from "./component/tipo/TipoForm.js";
 
+// Reportes
+import ReporteVentasDia from "./component/trabajador/ReporteVentasDias.js";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Página principal: Login */}
+        {/* Login */}
         <Route path="/" element={<Login />} />
 
-        {/* 🔴 Rutas Admin */}
+        {/* 🔴 ADMIN */}
         <Route path="/admin" element={<AdminLayout />}>
+          {/* Reportes */}
+          <Route path="reporte-dia" element={<ReporteVentasDia />} />
+
           {/* Administradores */}
           <Route path="administradores" element={<Administradores />} />
           <Route path="administradores/nuevo" element={<AdministradorForm />} />
@@ -67,9 +72,9 @@ function App() {
           <Route path="lotes/nuevo" element={<LoteForm />} />
         </Route>
 
-        {/* 🔵 Rutas Trabajador (solo lectura) */}
+        {/* 🔵 TRABAJADOR */}
         <Route path="/trabajador" element={<TrabajadorLayout />}>
-          <Route path="inicio" element={<Especies soloLectura={true} />} />
+          <Route path="inicio" element={<ReporteVentasDia />} /> {/* Reporte del día */}
           <Route path="especies" element={<Especies soloLectura={true} />} />
           <Route path="tipos" element={<Tipos soloLectura={true} />} />
           <Route path="lotes" element={<Lotes soloLectura={true} />} />
@@ -77,7 +82,7 @@ function App() {
           <Route path="compras" element={<Compras soloLectura={true} />} />
         </Route>
 
-        {/* 🔵 Rutas Comprador */}
+        {/* 🟢 COMPRADOR */}
         <Route path="/comprador" element={<CompradorLayout />}>
           <Route path="inicio" element={<InicioComprador />} />
           <Route path="compras" element={<ComprasGeneral />} />

@@ -1,11 +1,10 @@
-// src/component/compras/Compras.js
 import React, { useState, useEffect } from "react";
 import clienteAxios from "../../config/axios";
 import Swal from "sweetalert2";
 
 const CompraItem = ({ compra, refrescar, soloLectura }) => {
   if (!compra) return null;
-  const { _id, comprador, total, fecha } = compra;
+  const { _id, id_comprador, precio_total, fecha } = compra;
 
   const eliminarCompra = async () => {
     const r = await Swal.fire({
@@ -31,9 +30,9 @@ const CompraItem = ({ compra, refrescar, soloLectura }) => {
     <li className="compra-item">
       <div className="info-compra">
         <p><b>ID:</b> {_id}</p>
-        <p><b>Comprador:</b> {comprador?.nombre || comprador}</p>
-        <p><b>Total:</b> {total}</p>
-        <p><b>Fecha:</b> {new Date(fecha).toLocaleString()}</p>
+        <p><b>Comprador:</b> {id_comprador?.nombre || "Desconocido"}</p>
+        <p><b>Total:</b> {precio_total}</p>
+        <p><b>Fecha:</b> {fecha ? new Date(fecha).toLocaleString() : "Sin fecha"}</p>
       </div>
       <div className="acciones">
         {!soloLectura && <button className="btn btn-rojo" onClick={eliminarCompra}>Eliminar</button>}

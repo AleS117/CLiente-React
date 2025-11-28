@@ -6,9 +6,10 @@ import { Link } from "react-router-dom";
 
 const EspecieItem = ({ especie, refrescar, soloLectura }) => {
   if (!especie) return null;
-  const { _id, nombre, tipo, imagen } = especie; // asumo que poblaste tipo como objeto
+  const { _id, nombre, tipo, imagen } = especie;
 
   const eliminarEspecie = async () => {
+    if (soloLectura) return;
     const r = await Swal.fire({
       title: "¿Eliminar especie?",
       icon: "warning",
@@ -30,12 +31,10 @@ const EspecieItem = ({ especie, refrescar, soloLectura }) => {
 
   return (
     <li className="especie-item">
-      <div className="info-especie">
-        <p><b>ID:</b> {_id}</p>
-        <p><b>Nombre:</b> {nombre}</p>
-        <p><b>Tipo:</b> {tipo?.nombre || especie.id_tpo}</p>
-        {imagen && <img src={imagen} alt={nombre} width="80" />}
-      </div>
+      <p><b>ID:</b> {_id}</p>
+      <p><b>Nombre:</b> {nombre}</p>
+      <p><b>Tipo:</b> {tipo?.nombre || especie.id_tpo}</p>
+      {imagen && <img src={imagen} alt={nombre} width="80" />}
       <div className="acciones">
         {!soloLectura && <Link to={`/admin/especies/editar/${_id}`} className="btn btn-azul">Editar</Link>}
         {!soloLectura && <button className="btn btn-rojo" onClick={eliminarEspecie}>Eliminar</button>}
@@ -55,7 +54,6 @@ const Especies = ({ soloLectura = false }) => {
       });
       setEspecies(resp.data);
     } catch (err) {
-      console.error(err);
       Swal.fire("Error", "No se pudieron cargar las especies", "error");
     }
   };
@@ -67,9 +65,8 @@ const Especies = ({ soloLectura = false }) => {
       <h2>Especies</h2>
       {!soloLectura && <Link to="/admin/especies/nuevo" className="btn btn-verde">+ Nueva Especie</Link>}
       <ul className="lista-especies">
-        {especies.length === 0 ? <p>No hay especies.</p> : especies.map(e => (
-          <EspecieItem key={e._id} especie={e} refrescar={consultarAPI} soloLectura={soloLectura} />
-        ))}
+        {especies.length === 0 ? <p>No hay especies.</p> :
+          especies.map(e => <EspecieItem key={e._id} especie={e} refrescar={consultarAPI} soloLectura={soloLectura} />)}
       </ul>
     </div>
   );

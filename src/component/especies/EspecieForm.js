@@ -14,48 +14,65 @@ const EspecieForm = ({ soloLectura = false }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // Cargar los tipos disponibles
   useEffect(() => {
     const cargarTipos = async () => {
       try {
-        const res = await clienteAxios.get("/api/tipo/consulta", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await clienteAxios.get("/api/tipos/consulta", { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
         setTipos(res.data);
-      } catch {
+      } catch (err) {
+        console.error(err);
         Swal.fire("Error", "No se pudieron cargar los tipos", "error");
       }
     };
     cargarTipos();
   }, [token]);
 
+  // Cargar especie para edición
   useEffect(() => {
     if (!id) return;
-    const cargar = async () => {
+    const cargarEspecie = async () => {
       try {
-        const res = await clienteAxios.get(`/api/especies/consulta/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await clienteAxios.get(`/api/especies/consulta/${id}`, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
         setNombre(res.data.nombre || "");
-        setTipo(res.data.tipo?._id || res.data.id_tpo || "");
+        setTipo(res.data.tipo?._id || ""); // 🔹 Usar el campo tipo._id
         setImagen(res.data.imagen || "");
-      } catch {
+      } catch (err) {
+        console.error(err);
         Swal.fire("Error", "No se pudo cargar la especie", "error");
       }
     };
-    cargar();
+    cargarEspecie();
   }, [id, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (soloLectura) return;
+
     try {
-      const data = { nombre, id_tpo: tipo, imagen };
+      // 🔹 Enviar "tipo" y no "id_tpo"
+      const data = { nombre, tipo, imagen };
+
       if (id) {
-        await clienteAxios.put(`/api/especies/actualizar/${id}`, data, { headers: { Authorization: `Bearer ${token}` } });
+        await clienteAxios.put(`/api/especies/actualizar/${id}`, data, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
         Swal.fire("Actualizado", "Especie actualizada", "success");
       } else {
-        await clienteAxios.post("/api/especies/crear", data, { headers: { Authorization: `Bearer ${token}` } });
+        await clienteAxios.post("/api/especies/crear", data, { 
+          headers: { Authorization: `Bearer ${token}` } 
+        });
         Swal.fire("Creado", "Especie creada", "success");
       }
-      navigate("/admin/especies");
-    } catch {
-      Swal.fire("Error", "No se pudo guardar", "error");
+
+      navigate("/trabajador"); // Ajusta según tu vista
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "No se pudo guardar la especie", "error");
     }
   };
 
@@ -64,16 +81,32 @@ const EspecieForm = ({ soloLectura = false }) => {
       <h2>{id ? "Editar Especie" : "Nueva Especie"}</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre</label>
-        <input type="text" value={nombre} onChange={(e)=> setNombre(e.target.value)} disabled={soloLectura} required />
+        <input 
+          type="text" 
+          value={nombre} 
+          onChange={(e) => setNombre(e.target.value)} 
+          disabled={soloLectura} 
+          required 
+        />
 
         <label>Tipo</label>
-        <select value={tipo} onChange={(e)=> setTipo(e.target.value)} disabled={soloLectura} required>
+        <select 
+          value={tipo} 
+          onChange={(e) => setTipo(e.target.value)} 
+          disabled={soloLectura} 
+          required
+        >
           <option value="">-- Selecciona --</option>
           {tipos.map(t => <option key={t._id} value={t._id}>{t.nombre}</option>)}
         </select>
 
         <label>Imagen (URL)</label>
-        <input type="text" value={imagen} onChange={(e)=> setImagen(e.target.value)} disabled={soloLectura} />
+        <input 
+          type="text" 
+          value={imagen} 
+          onChange={(e) => setImagen(e.target.value)} 
+          disabled={soloLectura} 
+        />
 
         {!soloLectura && <button className="btn btn-verde" type="submit">{id ? "Actualizar" : "Agregar"}</button>}
       </form>

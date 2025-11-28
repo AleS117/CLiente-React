@@ -4,76 +4,80 @@ import clienteAxios from "../../config/axios";
 
 const ComprasGeneral = () => {
   const navigate = useNavigate();
-
-  // 🔹 Parsear comprador y token una sola vez
   const comprador = React.useMemo(() => JSON.parse(localStorage.getItem("comprador")), []);
   const token = React.useMemo(() => localStorage.getItem("token"), []);
 
   const [compras, setCompras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
-  // 🔹 Redirección si no hay comprador logueado
+  // Redirigir si no hay comprador logueado
   useEffect(() => {
-    if (!comprador || !comprador.id) {
-      navigate("/login-comprador");
-    }
+    if (!comprador?.id) navigate("/login-comprador");
   }, [comprador, navigate]);
 
-  // 🔹 Función para obtener compras
+  // Función para obtener compras
   const obtenerCompras = useCallback(async () => {
-    if (!comprador || !comprador.id) return;
+    if (!comprador?.id) return;
 
     try {
       setLoading(true);
       setError(null);
 
+      // Construir URL
       let url = `/api/compras/comprador/${comprador.id}`;
-
-      // Filtrado por rango de fechas si están definidas
       if (fechaInicio && fechaFin) {
         url += `?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
       }
 
-      const respuesta = await clienteAxios.get(url, {
+      const resp = await clienteAxios.get(url, {
         headers: { Authorization: token ? `Bearer ${token}` : "" },
       });
 
       // Ordenar por fecha descendente
-      const comprasOrdenadas = respuesta.data.sort(
-        (a, b) => new Date(b.fecha) - new Date(a.fecha)
-      );
-      setCompras(comprasOrdenadas);
+      setCompras(resp.data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)));
     } catch (err) {
-      console.error(err);
+      console.error(err.response || err);
       setError("Error al obtener las compras del comprador");
     } finally {
       setLoading(false);
     }
   }, [comprador, token, fechaInicio, fechaFin]);
 
-  // 🔹 Carga inicial y filtrado automático al cambiar fechas
-  useEffect(() => {
-    obtenerCompras();
-  }, [obtenerCompras]);
+  // Cargar compras al montar y al cambiar fechas
+  useEffect(() => { obtenerCompras(); }, [obtenerCompras]);
 
   return (
-    <div className="compras-general" style={{ maxWidth: "900px", margin: "20px auto" }}>
+    <div style={{ maxWidth: "900px", margin: "20px auto" }}>
       <h2 style={{ textAlign: "center" }}>Mis Compras</h2>
 
-      {/* Filtro por fechas */}
+      {/* Filtro por rango de fechas */}
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
         <label>
           Desde:{" "}
-          <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+          />
         </label>
         <label style={{ marginLeft: "10px" }}>
           Hasta:{" "}
-          <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          <input
+            type="date"
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+          />
         </label>
+        <button
+          className="btn btn-verde"
+          style={{ marginLeft: "10px" }}
+          onClick={obtenerCompras}
+        >
+          Filtrar
+        </button>
       </div>
 
       {loading && <p>Cargando compras...</p>}
@@ -82,9 +86,9 @@ const ComprasGeneral = () => {
 
       {/* Lista de compras */}
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {compras.map((compra) => (
+        {compras.map((c) => (
           <li
-            key={compra._id}
+            key={c._id}
             style={{
               border: "1px solid #ccc",
               borderRadius: "8px",
@@ -93,17 +97,20 @@ const ComprasGeneral = () => {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
-            <p><strong>Código:</strong> {compra.codigo_cpr}</p>
-            {compra.kilos && <p><strong>Kilos:</strong> {compra.kilos}</p>}
-            <p><strong>Precio por kilo:</strong> ${compra.precio_kilo_final}</p>
-            <p><strong>Precio total:</strong> ${compra.precio_total}</p>
-            <p><strong>Fecha:</strong> {new Date(compra.fecha).toLocaleDateString()}</p>
+            <p><strong>Código:</strong> {c.codigo_cpr}</p>
+            {c.kilos && <p><strong>Kilos:</strong> {c.kilos}</p>}
+            <p><strong>Precio por kilo:</strong> ${c.precio_kilo_final}</p>
+            <p><strong>Precio total:</strong> ${c.precio_total}</p>
+            <p><strong>Fecha:</strong> {new Date(c.fecha).toLocaleDateString()}</p>
           </li>
         ))}
       </ul>
 
       <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button className="btn btn-azul" onClick={() => navigate("/comprador/inicio")}>
+        <button
+          className="btn btn-azul"
+          onClick={() => navigate("/comprador/inicio")}
+        >
           ⬅ Regresar
         </button>
       </div>
